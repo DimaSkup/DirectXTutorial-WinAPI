@@ -34,6 +34,9 @@ int WINAPI WinMain(HINSTANCE hInstance,
 
 	// register the window class
 	RegisterClassEx(&wc);
+
+	RECT wr = { 0, 0, 500, 400 };	// set the size, but not the position
+	AdjustWindowRect(&wr, WS_OVERLAPPEDWINDOW, FALSE);	// adjust the size
 	
 	// create the window and use the result as the handle
 	hWnd = CreateWindowEx(NULL,
@@ -42,8 +45,8 @@ int WINAPI WinMain(HINSTANCE hInstance,
 						  WS_OVERLAPPEDWINDOW,	// window style
 						  300,		// x-position of the window
 						  300,		// y-position of the window
-						  500,		// width of the window
-						  400,		// height of the window
+						  wr.right - wr.left,		// width of the window
+						  wr.bottom - wr.top,		// height of the window
 						  NULL,		// we have no parent window, NULL
 						  NULL,		// we aren't using menus, NULL
 						  hInstance,	// application handle
