@@ -12,6 +12,15 @@
 #pragma comment (lib, "d3dx11.lib")
 #pragma comment (lib, "d3dx10.lib")
 
+// global declarations
+IDXGISwapChain *swapchain;		// the pointer to the swap chain interface
+ID3D11Device *dev;				// the pointer to the our Direct3D device interface
+ID3D11DeviceContext *devcon;	// the pointer to the our Direct3D device context
+
+// function prototypes
+void InitD3D(HWND hWnd);		// sets up and initializes Direct3D
+void CleanD3D(void);			// closes Direct3D and releases memory
+
 
 // the WindowProc function prototype
 LRESULT CALLBACK WindowProc(HWND hWnd,
@@ -117,4 +126,45 @@ LRESULT CALLBACK WindowProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPara
 
 	// Handle any messages the switch statement didn't
 	return DefWindowProc(hWnd, message, wParam, lParam);
+}
+
+
+
+/////////////////////////////////
+//
+// LAUNCHING DIRECT3D
+//
+/////////////////////////////////
+
+// this function intialize and prepares Direct3D for use
+void Init3D(HWND hWnd)
+{
+	// create a struct to hold information about the swap chain
+	DXGI_SWAP_CHAIN_DESC scd;
+
+	// clear out the struct for use
+	ZeroMemory(&scd, sizeof(DXGI_SWAP_CHAIN_DESC));
+
+	// fill the swap chain description struct
+	scd.BufferCount = 1;									// one back buffer
+	scd.BufferDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;		// use 32-bit colour
+	scd.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;		// how swap chain is to be used
+	scd.OutputWindow = hWnd;								// the window to be used
+	scd.SampleDesc.Count = 4;								// how many multisamples
+	scd.Windowed = TRUE;									// windowed/full-screen mode
+
+	// create a device, device context and swap chain using the information
+	// in the scd struct
+	D3D11CreateDeviceAndSwapChain(NULL,						// *pAdapter
+								  D3D_DRIVER_TYPE_HARDWARE,	// DriverType
+								  NULL,						// SoftWare
+								  NULL,						// Flags
+								  NULL,						// *pFeatureLevels
+								  NULL,						// FeatureLevels
+								  D3D11_SDK_VERSION,		// SDKVersion
+								  &scd,						// *pSwapChainDesc
+								  &swapchain,				// **ppSwapChain
+								  &dev,						// **ppDevice
+								  NULL,						// *pFeatureLevel
+								  &devcon);					// **ppDeviceContext
 }
