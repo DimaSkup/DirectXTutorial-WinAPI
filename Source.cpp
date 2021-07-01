@@ -137,7 +137,7 @@ LRESULT CALLBACK WindowProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPara
 /////////////////////////////////
 
 // this function intialize and prepares Direct3D for use
-void Init3D(HWND hWnd)
+void InitD3D(HWND hWnd)
 {
 	// create a struct to hold information about the swap chain
 	DXGI_SWAP_CHAIN_DESC scd;
@@ -167,4 +167,13 @@ void Init3D(HWND hWnd)
 								  &dev,						// **ppDevice
 								  NULL,						// *pFeatureLevel
 								  &devcon);					// **ppDeviceContext
+}
+
+// this is the function that cleans up Direct3D and COM
+void CleanD3D()
+{
+	// close and release all existing COM objects
+	swapchain->Release();
+	dev->Release();
+	devcon->Release();
 }
