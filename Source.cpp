@@ -16,10 +16,13 @@
 IDXGISwapChain *swapchain;		// the pointer to the swap chain interface
 ID3D11Device *dev;				// the pointer to the our Direct3D device interface
 ID3D11DeviceContext *devcon;	// the pointer to the our Direct3D device context
+ID3D11RenderTargetView *backbuffer;	// the pointer to the our back buffer
+
 
 // function prototypes
 void InitD3D(HWND hWnd);		// sets up and initializes Direct3D
 void CleanD3D(void);			// closes Direct3D and releases memory
+void RenderFrame(void);			// used to render a single frame
 
 
 // the WindowProc function prototype
@@ -94,17 +97,19 @@ int WINAPI WinMain(HINSTANCE hInstance,
 			DispatchMessage(&msg);
 
 			// check to see if it's time to quit
-			if (msg.message = WM_QUIT)
+			if (msg.message == WM_QUIT)
 				break;
 		}
 		else
 		{
 			// Run game code here
-			// ...
+			InitD3D(hWnd);
+			RenderFrame();
 		}
 		
 	}
 
+	CleanD3D();
 	// return this part of the WM_QUIT message to Windows
 	return msg.wParam;
 }
@@ -167,6 +172,33 @@ void InitD3D(HWND hWnd)
 								  &dev,						// **ppDevice
 								  NULL,						// *pFeatureLevel
 								  &devcon);					// **ppDeviceContext
+
+	
+
+	// Establishing of a render target (back buffer)
+	ID3D11Texture2D *pBackBuffer;
+	swapchain->GetBuffer(0, __uuidof(ID3D11Texture2D), (LPVOID*)&pBackBuffer);
+
+	// Use the back buffer address to create the render target
+	dev->CreateRenderTargetView(pBackBuffer, NULL, &backbuffer);
+	pBackBuffer->Release();
+
+	// Set the render target as the back buffer
+	devcon->OMSetRenderTargets(1, &backbuffer, NULL);
+
+
+
+	//--- SET THE VIEW PORT ---//
+	D3D11_VIEWPORT viewport;
+	ZeroMemory(&viewport, sizeof(D3D11_VIEWPORT));
+
+	viewport.TopLeftX = 0;
+	viewport.TopLeftY = 0;
+	viewport.Width = 800;
+	viewport.Height = 600;
+
+	devcon->RSSetViewports(1, &viewport);
+
 }
 
 // this is the function that cleans up Direct3D and COM
@@ -174,6 +206,19 @@ void CleanD3D()
 {
 	// close and release all existing COM objects
 	swapchain->Release();
+	backbuffer->Release();
 	dev->Release();
 	devcon->Release();
+}
+
+// this is the function used to render a single frame
+void RenderFrame(void)
+{
+	// clear the back buffer to a deep blue
+	devcon->ClearRenderTargetView(backbuffer, D3DXCOLOR(0.0f, 0.2f, 0.4f, 1.0f));
+
+	// do 3D rendering on the bakc buffer here
+
+	// switch the back buffer and the front buffer
+	swapchain->Present(0, 0);
 }
