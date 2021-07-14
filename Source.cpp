@@ -22,6 +22,9 @@ ID3D11Device *dev;				// the pointer to the our Direct3D device interface
 ID3D11DeviceContext *devcon;	// the pointer to the our Direct3D device context
 ID3D11RenderTargetView *backbuffer;	// the pointer to the our back buffer
 
+ID3D11VertexShader *pVS;		// the vertex shader
+ID3D11PixelShader *pPS;			// the pixel shader
+
 
 // function prototypes
 void InitD3D(HWND hWnd);		// sets up and initializes Direct3D
@@ -70,8 +73,8 @@ int WINAPI WinMain(HINSTANCE hInstance,
 						  L"WindowClass1",	// name of the window class
 						  L"Our First Windowed Program",	// title of the window
 						  WS_OVERLAPPEDWINDOW,	// window style
-						  300,		// x-position of the window
-						  300,		// y-position of the window
+						  10,		// x-position of the window
+						  10,		// y-position of the window
 						  SCREEN_WIDTH,		// width of the window
 						  SCREEN_HEIGHT,	// height of the window
 						  NULL,		// we have no parent window, NULL
@@ -215,6 +218,8 @@ void CleanD3D()
 	swapchain->SetFullscreenState(FALSE, NULL);		// switch to windowed mode
 
 	// close and release all existing COM objects
+	pVS->Release();
+	pPS->Release();
 	swapchain->Release();
 	backbuffer->Release();
 	dev->Release();
@@ -231,4 +236,26 @@ void RenderFrame(void)
 
 	// switch the back buffer and the front buffer
 	swapchain->Present(0, 0);
+}
+
+void InitPipeline()
+{
+	// load and compile the two shaders
+	ID3D10Blob *VS = nullptr;
+	ID3D10Blob *PS = nullptr;
+
+	D3DX11CompileFromFile(L"shaders.shader", NULL, NULL,
+						  "VShader", "vs_4_0", NULL, NULL, NULL,
+						  &VS, NULL, NULL);
+	D3DX11CompileFromFile(L"shaders.shader", NULL, NULL,
+						  "PShader", "ps_4_0", NULL, NULL, NULL,
+						  &PS, NULL, NULL);
+
+	// encapsulate both shaders into shader objects
+	dev->CreateVertexShader(VS->GetBufferPointer(), VS->GetBufferSize(), NULL, &pVS);
+	dev->CreatePixelShader(PS->GetBufferPointer(), PS->GetBufferSize(), NULL, &pPS);
+
+	// set the shader objects
+	devcon->VSSetShader(&pVS, nullptr, NULL);
+	devcon->PSSetShader(&pPS, nullptr, NULL);
 }
