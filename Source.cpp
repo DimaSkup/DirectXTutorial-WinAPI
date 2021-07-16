@@ -256,6 +256,45 @@ void InitPipeline()
 	dev->CreatePixelShader(PS->GetBufferPointer(), PS->GetBufferSize(), NULL, &pPS);
 
 	// set the shader objects
-	devcon->VSSetShader(&pVS, nullptr, NULL);
-	devcon->PSSetShader(&pPS, nullptr, NULL);
+	devcon->VSSetShader(pVS, nullptr, NULL);
+	devcon->PSSetShader(pPS, nullptr, NULL);
+}
+
+// a struct to define a vertex
+struct VERTEX
+{
+	FLOAT X, Y, Z;
+	D3DXCOLOR Color;
+};
+
+ID3D11Buffer *pVBuffer;
+
+void InitGraphics()
+{
+	// create a triangle using VERTEX struct
+	VERTEX OurVertices[] =
+	{
+		{0.0f, 0.5f, 0.0f, D3DXCOLOR{1.0f, 0.0f, 0.0f, 1.0f}},
+		{0.45f, -0.5f, 0.0f, D3DXCOLOR{0.0f, 1.0f, 0.0f, 1.0f}},
+		{-0.45f, -0.5f, 0.0f, D3DXCOLOR{0.0f, 0.0f, 1.0f, 1.0f}}
+	};
+
+	// create a description of the buffer
+	D3D11_BUFFER_DESC bd;
+	ZeroMemory(&bd, sizeof(bd));
+
+	bd.Usage = D3D11_USAGE_DYNAMIC;
+	bd.ByteWidth = sizeof(VERTEX) * 3;
+	bd.BindFlags = D3D11_BIND_VERTEX_BUFFER;
+	bd.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+
+	dev->CreateBuffer(&bd, NULL, &pVBuffer);
+
+	// fill in the vertex buffer with data of the triangle
+	D3D11_MAPPED_SUBRESOURCE ms;
+
+	devcon->Map(pVBuffer, NULL, D3D11_MAP_WRITE_DISCARD, NULL, &ms);
+	memcpy(ms.pData, OurVertices, sizeof(OurVertices));
+	devcon->Unmap(pVBuffer, NULL);
+
 }
