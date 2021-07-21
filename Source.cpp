@@ -25,12 +25,22 @@ ID3D11RenderTargetView *backbuffer;	// the pointer to the our back buffer
 ID3D11VertexShader *pVS;		// the vertex shader
 ID3D11PixelShader  *pPS;		// the pixel shader
 
+// a struct to define a vertex
+struct VERTEX
+{
+	FLOAT X, Y, Z;
+	D3DXCOLOR Color;
+};
+
+ID3D11Buffer *pVBuffer;			// a pointer to the vertex buffer
 ID3D11InputLayout *pLayout;		// the input layout
 
 // function prototypes
 void InitD3D(HWND hWnd);		// sets up and initializes Direct3D
 void CleanD3D(void);			// closes Direct3D and releases memory
 void RenderFrame(void);			// used to render a single frame
+void InitGraphics(void);    // creates the shape to render
+void InitPipeline(void);    // loads and prepares the shaders
 
 
 // the WindowProc function prototype
@@ -86,6 +96,9 @@ int WINAPI WinMain(HINSTANCE hInstance,
 	// display the window on the screen
 	ShowWindow(hWnd, nCmdShow);
 
+	// set up and initialize Direct3D
+	InitD3D(hWnd);
+
 	// enter the main loop:
 
 	// this struct holds Windows event messages
@@ -108,16 +121,12 @@ int WINAPI WinMain(HINSTANCE hInstance,
 			if (msg.message == WM_QUIT)
 				break;
 		}
-		else
-		{
-			// Run game code here
-			InitD3D(hWnd);
-			RenderFrame();
-			CleanD3D();
-		}
-		
+
+		RenderFrame();
 	}
 
+	// clean up DirectX and COM
+	CleanD3D();
 	
 	// return this part of the WM_QUIT message to Windows
 	return msg.wParam;
@@ -211,6 +220,9 @@ void InitD3D(HWND hWnd)
 
 	devcon->RSSetViewports(1, &viewport);
 
+	InitPipeline();
+	InitGraphics();
+
 }
 
 // this is the function that cleans up Direct3D and COM
@@ -219,8 +231,10 @@ void CleanD3D()
 	swapchain->SetFullscreenState(FALSE, NULL);		// switch to windowed mode
 
 	// close and release all existing COM objects
+	pLayout->Release();
 	pVS->Release();
 	pPS->Release();
+	pVBuffer->Release();
 	swapchain->Release();
 	backbuffer->Release();
 	dev->Release();
@@ -233,7 +247,16 @@ void RenderFrame(void)
 	// clear the back buffer to a deep blue
 	devcon->ClearRenderTargetView(backbuffer, D3DXCOLOR(0.0f, 0.2f, 0.4f, 1.0f));
 
-	// do 3D rendering on the bakc buffer here
+	// select which vertex buffer to display
+	UINT stride = sizeof(VERTEX);
+	UINT offset = 0;
+	devcon->IASetVertexBuffers(0, 1, &pVBuffer, &stride, &offset);
+
+	// select which primitive type we are using
+	devcon->IASetPrimitiveTopology(D3D10_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+
+	// draw the vertex buffer to the back buffer
+	devcon->Draw(3, 0);
 
 	// switch the back buffer and the front buffer
 	swapchain->Present(0, 0);
@@ -272,17 +295,6 @@ void InitPipeline()
 	dev->CreateInputLayout(ied, 2, VS->GetBufferPointer(), VS->GetBufferSize(), &pLayout);
 	devcon->IASetInputLayout(pLayout);
 }
-
-
-// a struct to define a vertex
-struct VERTEX
-{
-	FLOAT X, Y, Z;
-	D3DXCOLOR Color;
-};
-
-// a pointer to the vertex buffer
-ID3D11Buffer *pVBuffer;
 
 void InitGraphics()
 {
