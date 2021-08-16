@@ -10,5 +10,7 @@ int WINAPI WinMain(HINSTANCE hInstance,
 				L"Just another hello world program!",
 				MB_ICONEXCLAMATION | MB_OK);
 
+
+	// test
 	return 0;
 }
