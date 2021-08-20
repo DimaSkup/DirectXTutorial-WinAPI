@@ -1,7 +1,7 @@
 #include <windows.h>
 #include <windowsx.h>
 
-LRESULT CALLBACK WindowProc(HWND hWnd, 
+LRESULT CALLBACK WindowProc(HWND hWnd,
 							UINT message,
 							WPARAM wParam,
 							LPARAM lParam);
@@ -26,21 +26,27 @@ int WINAPI WinMain(HINSTANCE hInstance,
 
 	RegisterClassEx(&wc);
 
+	RECT wr = { 0, 0, 500, 400 };
+	AdjustWindowRect(&wr, WS_OVERLAPPEDWINDOW, false);
+
 	hWnd = CreateWindowEx(NULL,
-						  L"WindowClass1",
-						  L"Our first windowed program!",
-						  WS_OVERLAPPEDWINDOW,
-						  300,
-						  300,
-						  500,
-						  400,
-						  NULL,
-						  NULL,
-						  hInstance,
-						  NULL);
+						L"WindowClass1",
+						L"Our first window program!",
+						WS_OVERLAPPEDWINDOW,
+						300,
+						300,
+						wr.right - wr.left,
+						wr.bottom - wr.top,
+						NULL,
+						NULL,
+						hInstance,
+						NULL);
 
 	ShowWindow(hWnd, nCmdShow);
 
+
+
+	// main loop
 
 	MSG msg;
 
@@ -63,7 +69,8 @@ LRESULT CALLBACK WindowProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPara
 			PostQuitMessage(0);
 			return 0;
 		}
+		break;
 	}
 
-	return DefWindowProc(hWnd, message, wParam, lParam);
+	DefWindowProc(hWnd, message, wParam, lParam);
 }
