@@ -1,6 +1,19 @@
 #include <windows.h>
 #include <windowsx.h>
+#include <d3d11.h>
+#include <d3dx11.h>
+#include <d3dx10.h>
 
+#pragma comment (lib, "d3d11.lib")
+#pragma comment (lib, "d3dx11.lib")
+#pragma comment (lib, "d3dx10.lib")
+
+IDXGISwapChain *swapchain = nullptr;
+ID3D11Device *dev = nullptr;
+ID3D11DeviceContext *devcon = nullptr;
+
+void InitD3D(HWND hWnd);
+void CloseD3D(void);
 
 // our custom handler for events of a window
 LRESULT CALLBACK WindowProc(HWND hWnd,
@@ -102,4 +115,36 @@ LRESULT CALLBACK WindowProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPara
 
 	// if we don't have some particular message value, then we pass it to a standard handler of window events
 	DefWindowProc(hWnd, message, wParam, lParam);
+}
+
+
+
+// LAUNCHING Direct3D
+
+// this function intializes and prepares Direct3D for use
+void InitD3D(HWND hWnd)
+{
+	DXGI_SWAP_CHAIN_DESC scd;
+
+	ZeroMemory(&scd, sizeof(DXGI_SWAP_CHAIN_DESC));
+
+	scd.BufferCount = 1;
+	scd.BufferDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+	scd.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
+	scd.OutputWindow = hWnd;
+	scd.SampleDesc.Count = 4;
+	scd.Windowed = TRUE;
+
+	D3D11CreateDeviceAndSwapChain(NULL,
+									D3D_DRIVER_TYPE_HARDWARE,
+									NULL,
+									NULL,
+									NULL,
+									NULL,
+									D3D11_SDK_VERSION,
+									&scd,
+									&swapchain,
+									&dev,
+									NULL,
+									&devcon);
 }
