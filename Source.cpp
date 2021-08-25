@@ -157,7 +157,7 @@ void InitD3D(HWND hWnd)
 	D3D11CreateDeviceAndSwapChain(NULL,		// *pAdapter
 									D3D_DRIVER_TYPE_HARDWARE, // driver type
 									NULL,	// software
-									D3D11_CREATE_DEVICE_DEBUG,	// flags
+									NULL,	// flags
 									NULL,	// *pFeatureLevels
 									NULL,	// Feature Levels (how many)
 									D3D11_SDK_VERSION,	// SDKVersion
@@ -166,13 +166,15 @@ void InitD3D(HWND hWnd)
 									&dev,	// pointer to pointer to device
 									NULL,	// pointer to a feature level variable
 									&devcon);	// pointer to pointer to device context
+
+
 }
 
 // this is the function that cleans up Direct3D and COM
 void CleanD3D(void)
 {
 	// close and release all existing COM objects
-	//swapchain->Release();
-	//dev->Release();
-	//devcon->Release();
+	swapchain->Release();
+	dev->Release();
+	devcon->Release();
 }
