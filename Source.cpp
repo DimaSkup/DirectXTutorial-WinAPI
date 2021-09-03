@@ -14,11 +14,19 @@
 #define SCREEN_WIDTH 800
 #define SCREEN_HEIGHT 600
 
+
+// global variables, COM objects, etc.
 IDXGISwapChain *swapchain = nullptr;
 ID3D11Device *dev = nullptr;
 ID3D11DeviceContext *devcon = nullptr;
 
 ID3D11RenderTargetView *backbuffer = nullptr;
+
+ID3D11VertexShader *pVS;		// the vertex shader
+ID3D11PixelShader  *pPS;		// the pixel shader
+
+
+void InitPipeline(void);
 
 void InitD3D(HWND hWnd);
 void CleanD3D(void);
@@ -201,9 +209,53 @@ void CleanD3D()
 	swapchain->SetFullscreenState(FALSE, NULL);
 
 	// close and release all existing COM objects
+	pVS->Release();
+	pPS->Release();
 	swapchain->Release();
 	backbuffer->Release();
 	dev->Release();
 	devcon->Release();
 }
 
+
+
+void InitPipeline(void)
+{
+	// load and compile the two shaders
+	ID3D10Blob *VS;		// we'll put here a compiled code of the vertex shader
+	ID3D10Blob *PS;		// we'll put here a compiled code of the pixel shader
+
+						// compile the vertex shader
+	D3DX11CompileFromFile(L"shaders.shader",
+		NULL,
+		NULL,
+		"VShader",
+		"vs_4_0",
+		NULL,
+		NULL,
+		NULL,
+		&VS,
+		NULL,
+		NULL);
+
+	// compile the pixel shader 
+	D3DX11CompileFromFile(L"shaders.shader",
+		NULL,
+		NULL,
+		"PShader",
+		"ps_4_0",
+		NULL,
+		NULL,
+		NULL,
+		&PS,
+		NULL,
+		NULL);
+
+	// encapsulate both shaders into shader objects
+	dev->CreateVertexShader(VS->GetBufferPointer(), VS->GetBufferSize(), NULL, &pVS);
+	dev->CreatePixelShader(PS->GetBufferPointer(), PS->GetBufferSize(), NULL, &pPS);
+
+	// set the shader objects
+	devcon->VSSetShader(pVS, NULL, NULL);
+	devcon->PSSetShader(pPS, NULL, NULL);
+}
