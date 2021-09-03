@@ -9,66 +9,65 @@
 #pragma comment (lib, "d3dx11.lib")
 #pragma comment (lib, "d3dx10.lib")
 
-// global variables
+
+// define the screen resolution
+#define SCREEN_WIDTH 800
+#define SCREEN_HEIGHT 600
+
 IDXGISwapChain *swapchain = nullptr;
 ID3D11Device *dev = nullptr;
 ID3D11DeviceContext *devcon = nullptr;
 
 ID3D11RenderTargetView *backbuffer = nullptr;
 
-// functions prototypes
 void InitD3D(HWND hWnd);
+void CleanD3D(void);
 void RenderFrame(void);
-void ClearD3D(void);
 
-// our custom handler of events from windows
 LRESULT CALLBACK WindowProc(HWND hWnd,
-							UINT message,
-							WPARAM wParam,
-							LPARAM lParam);
+	UINT message,
+	WPARAM wParam,
+	LPARAM lParam);
 
 int WINAPI WinMain(HINSTANCE hInstance,
-					HINSTANCE hPrevInstance,
-					LPSTR lpCmdLine,
-					int nCmdShow)
+	HINSTANCE hPrevInstance,
+	LPSTR lpCmdLine,
+	int nCmdShow)
 {
 	HWND hWnd;
 	WNDCLASSEX wc;
 
-	ZeroMemory(&wc, sizeof(wc));
+	ZeroMemory(&wc, sizeof(WNDCLASSEX));
 
 	wc.cbSize = sizeof(WNDCLASSEX);
 	wc.style = CS_HREDRAW | CS_VREDRAW;
 	wc.lpfnWndProc = WindowProc;
 	wc.hInstance = hInstance;
 	wc.hCursor = LoadCursor(NULL, IDC_ARROW);
-	wc.hbrBackground = reinterpret_cast<HBRUSH>(COLOR_WINDOW);
+	//wc.hbrBackground = reinterpret_cast<HBRUSH>(COLOR_WINDOW);
 	wc.lpszClassName = L"WindowClass1";
 
 	RegisterClassEx(&wc);
 
-	RECT wr = { 0, 0, 500, 400 };
+	RECT wr = { 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT };
 	AdjustWindowRect(&wr, WS_OVERLAPPEDWINDOW, false);
 
 	hWnd = CreateWindowEx(NULL,
-						L"WindowClass1",
-						L"Our first window program!",
-						WS_OVERLAPPEDWINDOW,
-						300, 
-						300,
-						wr.right - wr.left,
-						wr.bottom - wr.top,
-						NULL,
-						NULL,
-						hInstance,
-						NULL);
+		L"WindowClass1",
+		L"Our first window program!",
+		WS_OVERLAPPEDWINDOW,
+		100,
+		100,
+		wr.right - wr.left,
+		wr.bottom - wr.top,
+		NULL,
+		NULL,
+		hInstance,
+		NULL);
 
 	ShowWindow(hWnd, nCmdShow);
 
-	// initialize directX stuff
 	InitD3D(hWnd);
-
-
 
 	// main loop
 
@@ -86,87 +85,90 @@ int WINAPI WinMain(HINSTANCE hInstance,
 		}
 		else
 		{
-			// do here your game stuff
+			// do here game stuff
 			RenderFrame();
 		}
 	}
 
-	// clear up COM objects, etc.
-	ClearD3D();
+	CleanD3D();
 
 	return msg.wParam;
 }
 
-
-LPARAM CALLBACK WindowProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
+LRESULT CALLBACK WindowProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
 	switch (message)
 	{
-		case WM_DESTROY:
-		{
-			PostQuitMessage(0);
-			return 0;
-		}
-		break;
+	case WM_DESTROY:
+	{
+		PostQuitMessage(0);
+		return 0;
+	}
+	break;
 	}
 
 	DefWindowProc(hWnd, message, wParam, lParam);
 }
 
-
-
-
-// directX initialization
 void InitD3D(HWND hWnd)
 {
+	// create a struct to hold information about the swap chain
 	DXGI_SWAP_CHAIN_DESC scd;
 
+	// clear out the struct for use
 	ZeroMemory(&scd, sizeof(DXGI_SWAP_CHAIN_DESC));
 
-	scd.BufferCount = 1;
-	scd.BufferDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
-	scd.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
-	scd.OutputWindow = hWnd;
-	scd.SampleDesc.Count = 4;
-	scd.SampleDesc.Quality = 0;
-	scd.Windowed = TRUE;
+	// fill the swap chain description struct
+	scd.BufferCount = 1;								// one back buffer
+	scd.BufferDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;	// use 32-bit color
+	scd.BufferDesc.Width = SCREEN_WIDTH;				// set the back buffer width
+	scd.BufferDesc.Height = SCREEN_HEIGHT;				// set the back buffer height 
+	scd.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;	// how swap chain is to be used
+	scd.OutputWindow = hWnd;							// the window to be used
+	scd.SampleDesc.Count = 4;							// how many multisamples
+	scd.SampleDesc.Quality = 0;							// multisample quality level
+	scd.Windowed = TRUE;								// windowed/full-screen mode
+	scd.Flags = DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH;	// allow full-screen switching
 
+														// create a device, device context and swap chain using the information in the scd struct
 	D3D11CreateDeviceAndSwapChain(NULL,
-									D3D_DRIVER_TYPE_HARDWARE,
-									NULL,		
-									NULL,
-									NULL,
-									NULL,
-									D3D11_SDK_VERSION,
-									&scd,
-									&swapchain,
-									&dev,
-									NULL,
-									&devcon);
+		D3D_DRIVER_TYPE_HARDWARE,
+		NULL,
+		NULL,
+		NULL,
+		NULL,
+		D3D11_SDK_VERSION,
+		&scd,
+		&swapchain,
+		&dev,
+		NULL,
+		&devcon);
 
-
-	// initialize the render target view
+	// get the address of the back buffer
 	ID3D11Texture2D *pBackBuffer = nullptr;
 	swapchain->GetBuffer(0, __uuidof(ID3D11Texture2D), (LPVOID*)&pBackBuffer);
 
+	// use the back buffer address to create the render target
 	dev->CreateRenderTargetView(pBackBuffer, NULL, &backbuffer);
 	pBackBuffer->Release();
 
+	// set the render targe as the back buffer
 	devcon->OMSetRenderTargets(1, &backbuffer, NULL);
 
 
-	// initialize the viewport
+	// set the viewport
 	D3D11_VIEWPORT viewport;
 
 	ZeroMemory(&viewport, sizeof(D3D11_VIEWPORT));
 
 	viewport.TopLeftX = 0;
 	viewport.TopLeftY = 0;
-	viewport.Width = 800;
-	viewport.Height = 600;
+	viewport.Width = SCREEN_WIDTH;
+	viewport.Height = SCREEN_HEIGHT;
 
 	devcon->RSSetViewports(1, &viewport);
 }
+
 
 FLOAT colorVal = 1.0f;
 FLOAT colorStep = 0.01f;
@@ -175,6 +177,7 @@ int tickCount = 0;
 void RenderFrame(void)
 {
 	// each 0.1 second we change the color of the render target view
+	// from deep blue to black
 	if ((GetTickCount() / 100) != tickCount)
 	{
 		tickCount = GetTickCount() / 100;
@@ -182,7 +185,7 @@ void RenderFrame(void)
 
 		devcon->ClearRenderTargetView(backbuffer, D3DXCOLOR(colorVal - 1.0f, colorVal - 0.8f, colorVal - 0.6f, 1.0f));
 	}
-	
+
 
 	// here you can render into your backbuffer
 	// ...
@@ -190,10 +193,17 @@ void RenderFrame(void)
 	swapchain->Present(0, 0);
 }
 
-void ClearD3D(void)
+
+
+// this is the function that cleans up Direct3D and COM
+void CleanD3D()
 {
+	swapchain->SetFullscreenState(FALSE, NULL);
+
+	// close and release all existing COM objects
 	swapchain->Release();
 	backbuffer->Release();
 	dev->Release();
 	devcon->Release();
 }
+
