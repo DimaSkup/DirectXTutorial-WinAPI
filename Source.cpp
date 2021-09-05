@@ -26,6 +26,16 @@ ID3D11VertexShader *pVS;		// the vertex shader
 ID3D11PixelShader  *pPS;		// the pixel shader
 
 
+struct VERTEX					// a struct to define a vertex
+{
+	FLOAT X, Y, Z;
+	D3DXCOLOR Color;
+};
+
+ID3D11Buffer *pVBuffer = nullptr;	// the vertex buffer
+
+
+
 void InitPipeline(void);
 
 void InitD3D(HWND hWnd);
@@ -258,4 +268,35 @@ void InitPipeline(void)
 	// set the shader objects
 	devcon->VSSetShader(pVS, NULL, NULL);
 	devcon->PSSetShader(pPS, NULL, NULL);
+}
+
+
+void InitGraphics(void)
+{
+	// create a triangle using the VERTEX struct
+	VERTEX OurVertices[] = {
+		{ 0.0f, 0.5f, 0.0f, D3DXCOLOR(1.0f, 0.0f, 0.0f, 1.0f) },
+		{ 0.45f, -0.5f, 0.0f, D3DXCOLOR(0.0f, 1.0f, 0.0f, 1.0f) },
+		{ -0.45f, -0.5f, 0.0f, D3DXCOLOR(0.0f, 0.0f, 1.0f, 1.0f) },
+	};
+
+	// create the vertex buffer
+	D3D11_BUFFER_DESC bd;
+	ZeroMemory(&bd, sizeof(D3D11_BUFFER_DESC));
+
+	bd.Usage = D3D11_USAGE_DYNAMIC;				// write access access by CPU and GPU
+	bd.ByteWidth = sizeof(VERTEX) * 3;			// size is the VERTEX struct * 3
+	bd.BindFlags = D3D11_BIND_VERTEX_BUFFER;	// use as a vertex buffer
+	bd.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;	// allow CPU to write in the buffer
+
+	dev->CreateBuffer(&bd, NULL, &pVBuffer);	// create the buffer
+
+
+
+
+	D3D11_MAPPED_SUBRESOURCE ms;
+
+	devcon->Map(pVBuffer, NULL, D3D11_MAP_WRITE_DISCARD, NULL, &ms);
+	memcpy(ms.pData, OurVertices, sizeof(OurVertices));
+	devcon->Unmap(pVBuffer, NULL);
 }
