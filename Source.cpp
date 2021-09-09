@@ -22,25 +22,27 @@ ID3D11DeviceContext *devcon = nullptr;
 
 ID3D11RenderTargetView *backbuffer = nullptr;
 
-ID3D11VertexShader *pVS;		// the vertex shader
-ID3D11PixelShader  *pPS;		// the pixel shader
+ID3D11VertexShader	*pVS = nullptr;		// the vertex shader
+ID3D11PixelShader	*pPS = nullptr;		// the pixel shader
+ID3D11InputLayout	*pLayout = nullptr;	// the input layout
 
 
-struct VERTEX					// a struct to define a vertex
+struct VERTEX							// a struct to define the vertex
 {
 	FLOAT X, Y, Z;
 	D3DXCOLOR Color;
 };
 
-ID3D11Buffer *pVBuffer = nullptr;	// the vertex buffer
+ID3D11Buffer *pVBuffer = nullptr;		// the vertex buffer
 
-
-
-void InitPipeline(void);
 
 void InitD3D(HWND hWnd);
 void CleanD3D(void);
 void RenderFrame(void);
+
+
+void InitPipeline(void);				// initialization of shaders
+void InitGraphics(void);				// creation and initialization of a vertex buffer
 
 LRESULT CALLBACK WindowProc(HWND hWnd,
 	UINT message,
@@ -86,6 +88,8 @@ int WINAPI WinMain(HINSTANCE hInstance,
 	ShowWindow(hWnd, nCmdShow);
 
 	InitD3D(hWnd);
+	InitPipeline();
+	InitGraphics();
 
 	// main loop
 
@@ -208,6 +212,13 @@ void RenderFrame(void)
 	// here you can render into your backbuffer
 	// ...
 
+	UINT stride = sizeof(VERTEX);
+	UINT offset = 0;
+
+	devcon->IASetVertexBuffers(0, 1, &pVBuffer, &stride, &offset);
+	devcon->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+	devcon->Draw(3, 0);
+
 	swapchain->Present(0, 0);
 }
 
@@ -228,14 +239,13 @@ void CleanD3D()
 }
 
 
-
 void InitPipeline(void)
 {
 	// load and compile the two shaders
-	ID3D10Blob *VS;		// we'll put here a compiled code of the vertex shader
-	ID3D10Blob *PS;		// we'll put here a compiled code of the pixel shader
+	ID3D10Blob *VS = nullptr;	// we'll put here a compiled code of the vertex shader
+	ID3D10Blob *PS = nullptr;	// we'll put here a compiled code of the pixel shader
 
-						// compile the vertex shader
+	// compile the vertex shader
 	D3DX11CompileFromFile(L"shaders.shader",
 		NULL,
 		NULL,
@@ -248,7 +258,7 @@ void InitPipeline(void)
 		NULL,
 		NULL);
 
-	// compile the pixel shader 
+	// compile the pixel shader
 	D3DX11CompileFromFile(L"shaders.shader",
 		NULL,
 		NULL,
@@ -265,19 +275,28 @@ void InitPipeline(void)
 	dev->CreateVertexShader(VS->GetBufferPointer(), VS->GetBufferSize(), NULL, &pVS);
 	dev->CreatePixelShader(PS->GetBufferPointer(), PS->GetBufferSize(), NULL, &pPS);
 
-	// set the shader objects
+	// set shader objects
 	devcon->VSSetShader(pVS, NULL, NULL);
 	devcon->PSSetShader(pPS, NULL, NULL);
+
+	D3D11_INPUT_ELEMENT_DESC ied[] =
+	{
+		{"POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0},
+		{"COLOR", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0},
+	};
+
+	dev->CreateInputLayout(ied, 2, VS->GetBufferPointer(), VS->GetBufferSize(), &pLayout);
+	devcon->IASetInputLayout(pLayout);
 }
 
 
 void InitGraphics(void)
 {
-	// create a triangle using the VERTEX struct
+	// create the triangle using the VERTEX struct
 	VERTEX OurVertices[] = {
-		{ 0.0f, 0.5f, 0.0f, D3DXCOLOR(1.0f, 0.0f, 0.0f, 1.0f) },
-		{ 0.45f, -0.5f, 0.0f, D3DXCOLOR(0.0f, 1.0f, 0.0f, 1.0f) },
-		{ -0.45f, -0.5f, 0.0f, D3DXCOLOR(0.0f, 0.0f, 1.0f, 1.0f) },
+		{0.0f, 0.5f, 0.0f,   D3DXCOLOR(1.0f, 1.0f, 0.0f, 1.0f)},
+		{0.45f, -0.5f, 0.0f,  D3DXCOLOR{0.0f, 1.0f, 0.0f, 1.0f}},
+		{-0.45f, -0.5f, 0.0f, D3DXCOLOR{0.0f, 0.0f, 1.0f, 1.0f}},
 	};
 
 	// create the vertex buffer
@@ -291,12 +310,10 @@ void InitGraphics(void)
 
 	dev->CreateBuffer(&bd, NULL, &pVBuffer);	// create the buffer
 
-
-
-
+	// copy the vertices into the buffer
 	D3D11_MAPPED_SUBRESOURCE ms;
-
 	devcon->Map(pVBuffer, NULL, D3D11_MAP_WRITE_DISCARD, NULL, &ms);
 	memcpy(ms.pData, OurVertices, sizeof(OurVertices));
 	devcon->Unmap(pVBuffer, NULL);
 }
+
