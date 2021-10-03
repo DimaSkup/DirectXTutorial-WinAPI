@@ -35,7 +35,7 @@ ID3D11InputLayout *pLayout = nullptr;			// the input layout for the vertex buffe
 
 
 
-// functions prototypes
+												// functions prototypes
 
 void InitD3D(HWND hWnd);	// inialization of the swapchain, device, device context, viewport
 
@@ -46,17 +46,17 @@ void RenderFrame(void);		// this is the function for rendering of each frame int
 
 void ClearD3D(void);		// releasing all the COM-objects, used memory; doing some preparations before closing the window
 
-// custom handler for events of the window
+							// custom handler for events of the window
 LRESULT CALLBACK WindowProc(HWND hWnd,
-							UINT message,
-							WPARAM wParam,
-							LPARAM lParam);
+	UINT message,
+	WPARAM wParam,
+	LPARAM lParam);
 
 // main function
 int WINAPI WinMain(HINSTANCE hInstance,
-					HINSTANCE hPrevInstance,
-					LPSTR lpCmdLine,
-					int nCmdShow)
+	HINSTANCE hPrevInstance,
+	LPSTR lpCmdLine,
+	int nCmdShow)
 {
 	HWND hWnd;		// the window handler
 	WNDCLASSEX wc;	// the description of a new window class
@@ -82,17 +82,17 @@ int WINAPI WinMain(HINSTANCE hInstance,
 
 	// create a new window and use the result of this function as a window handler
 	hWnd = CreateWindowEx(NULL,
-							L"WindowClass",
-							L"Our window program!",
-							WS_OVERLAPPEDWINDOW,
-							100,
-							100,
-							wr.right - wr.left,
-							wr.bottom - wr.top,
-							NULL,
-							NULL,
-							hInstance,
-							NULL);
+		L"WindowClass",
+		L"Our window program!",
+		WS_OVERLAPPEDWINDOW,
+		100,
+		100,
+		wr.right - wr.left,
+		wr.bottom - wr.top,
+		NULL,
+		NULL,
+		hInstance,
+		NULL);
 
 	// show the window which has been just created
 	ShowWindow(hWnd, nCmdShow);
@@ -136,11 +136,11 @@ LRESULT CALLBACK WindowProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPara
 {
 	switch (message)
 	{
-		case WM_DESTROY:			// message about closing the window
-		{
-			PostQuitMessage(0);		// pass to the main loop message about closing the window
-			return 0;
-		}
+	case WM_DESTROY:			// message about closing the window
+	{
+		PostQuitMessage(0);		// pass to the main loop message about closing the window
+		return 0;
+	}
 	}
 
 	// the default hanlder for window events
@@ -166,19 +166,19 @@ void InitD3D(HWND hWnd)
 	scd.Windowed = TRUE;								// windowed/full-screen mode
 	scd.Flags = DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH;	// allow full-screen switching
 
-	// create the device, device context, swap chain using the swapchain description
+														// create the device, device context, swap chain using the swapchain description
 	D3D11CreateDeviceAndSwapChain(NULL,
-								D3D_DRIVER_TYPE_HARDWARE,
-								NULL,
-								NULL,
-								NULL,
-								NULL,
-								D3D11_SDK_VERSION,
-								&scd,
-								&swapchain,
-								&dev,
-								NULL,
-								&devcon);
+		D3D_DRIVER_TYPE_HARDWARE,
+		NULL,
+		NULL,
+		NULL,
+		NULL,
+		D3D11_SDK_VERSION,
+		&scd,
+		&swapchain,
+		&dev,
+		NULL,
+		&devcon);
 
 
 	// create and initialize the render target output
@@ -192,7 +192,7 @@ void InitD3D(HWND hWnd)
 
 
 
-	// create and initialize the viewport
+																	// create and initialize the viewport
 	D3D11_VIEWPORT viewport;
 	ZeroMemory(&viewport, sizeof(D3D11_VIEWPORT));
 
@@ -212,31 +212,31 @@ void InitPipeline(void)
 	ID3D10Blob *VS = nullptr;	// a blob for the compiled code of the vertex shader
 	ID3D10Blob *PS = nullptr;	// a blob for the compiled code of the pixel shader
 
-	// compile the vertex shader code
+								// compile the vertex shader code
 	D3DX11CompileFromFile(L"shaders.shader",
-							NULL,
-							NULL,
-							"VShader",
-							"vs_4_0",
-							NULL,
-							NULL,
-							NULL,
-							&VS,
-							NULL,
-							NULL);
+		NULL,
+		NULL,
+		"VShader",
+		"vs_4_0",
+		NULL,
+		NULL,
+		NULL,
+		&VS,
+		NULL,
+		NULL);
 
 	// compile the pixel shader code
 	D3DX11CompileFromFile(L"shaders.shader",
-							NULL,
-							NULL,
-							"PShader",
-							"ps_4_0",
-							NULL,
-							NULL,
-							NULL,
-							&PS,
-							NULL,
-							NULL);
+		NULL,
+		NULL,
+		"PShader",
+		"ps_4_0",
+		NULL,
+		NULL,
+		NULL,
+		&PS,
+		NULL,
+		NULL);
 
 	// encapsulate both shaders into the shader objects
 	dev->CreateVertexShader(VS->GetBufferPointer(), VS->GetBufferSize(), NULL, &pVShader);
@@ -285,7 +285,7 @@ void InitGraphics(void)
 	dev->CreateBuffer(&bd, NULL, &pVBuffer);	// create a new vertex buffer using the buffer description
 
 
-	// fill in the vertex buffer with data of the triangle
+												// fill in the vertex buffer with data of the triangle
 	D3D11_MAPPED_SUBRESOURCE ms;
 	devcon->Map(pVBuffer, NULL, D3D11_MAP_WRITE_DISCARD, NULL, &ms);	// locking of the vertex buffer during writing the data into it
 	memcpy(ms.pData, triangle, sizeof(triangle));						// copying of the triangle's data into the mapped subresource of the vertex buffer
@@ -296,7 +296,7 @@ FLOAT colorVal = 1.0f;		// white color
 FLOAT colorStride = 0.01;	// value of the color changing step
 int tickCount = 0;			// seconds value
 
-// this is the function for rendering each frame on the screen
+							// this is the function for rendering each frame on the screen
 void RenderFrame(void)
 {
 	// clear up and fill in the render target view with a deep blue color
@@ -320,6 +320,7 @@ void RenderFrame(void)
 	// swap values between the frontbuffer and the backbuffer
 	swapchain->Present(0, 0);
 }
+
 
 // clears up Direct3D,
 // releasing all the COM-objects, used memory; 
